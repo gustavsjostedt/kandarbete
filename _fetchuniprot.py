@@ -1,6 +1,6 @@
 """
-This script can be used to extract protein functions from UniProt if
-such information is available.
+This script can be used to extract protein name andfunction from UniProt 
+if such information is available.
 
 The user can specify an excel-file to be read (read_file),
 the target column header in that file (parameter_column should be 
@@ -19,9 +19,9 @@ import requests
 import pandas as pd
 import csv
 
-read_file = "ANNOTATED_Affibody_HCP_LIST.xlsx"
+read_file = "ANNOTATED_HCP_list.xlsx"
 parameter_column = 'UniProt'
-output_path = "protein_descriptions_output2.csv"
+output_path = "protein_descriptions_output.csv"
 headers = ["index", "uniprot_id", "type", "activity"]
 
 # open session to reduce connectioning overhead
@@ -65,7 +65,7 @@ def fetch_protein(uniprot_id):
         return "Error: Unexpected response structure"
 
 
-# convert target column in file to interable using pandas
+# convert target column in file to iterable using pandas
 
 df = pd.read_excel(read_file)
 id_lst = df[parameter_column].tolist()
@@ -78,7 +78,7 @@ with open(output_path, "w", newline="") as file:
     writer.writerow(headers)
 
     #if portion of list is of interest, splice the list
-    for index, uniprot_id in enumerate(id_lst[:15]): 
+    for index, uniprot_id in enumerate(id_lst[:]): 
         name_prot, activity = fetch_protein(uniprot_id)
         writer.writerow([index, uniprot_id, name_prot, activity])
 
