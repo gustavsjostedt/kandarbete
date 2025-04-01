@@ -34,29 +34,33 @@ def fetch_protein(uniprot_id):
         response = session.get(url)
         response.raise_for_status()
 
-        # if no status error:
+        # if no status error (200):
         data = response.json()
         
-        # find singular recommended name in json data
+        # find singular recommended name in json (nested dict)
+        # Fetches empty dict if no match to specified keys, 
+        # otherwise returns value of key. Based on the structure of
+        # the REST API respons from UniProt
         name_recommended = (data.get("proteinDescription", {})
                             .get("recommendedName", {}))
         name_prot = (name_recommended.get("fullName", {})
                      .get("value","Unspecified protein"))
         
-        # iterate through multiple comments and return the functional 
-        # comment using next()
+        # iterate through multiple comments in json data and return the 
+        # functional comment, using next(), to match the comment of 
+        # commenttype "Function". 
         activity_comment = next(
             (comment for comment in data.get("comments", [])
               if comment.get("commentType") == "FUNCTION"),
             {})
-        
+        # Returns value of key or "No molecular..." if dict is empty
         activity = (activity_comment
                     .get("texts", [{}])[0]
                     .get("value", "No molecular activity found."))
 
         return name_prot, activity
     
-    # catching errors
+    # catching errors in general fashion
     except requests.exceptions.HTTPError as http_err:
         return f"HTTP Error: {http_err}"
     except requests.exceptions.RequestException as req_err:
@@ -70,14 +74,14 @@ def fetch_protein(uniprot_id):
 df = pd.read_excel(read_file)
 id_lst = df[parameter_column].tolist()
 
-# writing output from function iteratively using 
-# standard python csv.writer()
+# writing output from fetch_protein() iteratively using 
+# standard python csv.writer() to csv
 
 with open(output_path, "w", newline="") as file:
     writer = csv.writer(file)
     writer.writerow(headers)
 
-    #if portion of list is of interest, splice the list
+    #if portion of list is of interest, splice the list on next line
     for index, uniprot_id in enumerate(id_lst[:]): 
         name_prot, activity = fetch_protein(uniprot_id)
         writer.writerow([index, uniprot_id, name_prot, activity])
